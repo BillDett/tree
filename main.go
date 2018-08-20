@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"math"
 	"os"
 	"path/filepath"
 	"sort"
@@ -53,6 +54,9 @@ func makeIndent(level int) string {
 }
 
 func listDir(dir string, level int) {
+	if level > maxLevel {
+		return
+	}
 	currDir, err := os.Open(dir)
 	defer currDir.Close()
 	if err != nil {
@@ -94,12 +98,29 @@ func listDir(dir string, level int) {
 	}
 }
 
+var exclude string
+var include string
+var all bool
+var size bool
+var human bool
+var kind bool
+var maxLevel int
+
 func main() {
 	var root string
 	var simple bool
 
 	flag.StringVar(&root, "d", ".", "Directory to build tree from")
 	flag.BoolVar(&simple, "s", false, "Use simple chars for line drawing")
+	flag.IntVar(&maxLevel, "L", math.MaxInt16, "Maximum levels to display")
+	// Unimplemented Flags
+	flag.StringVar(&include, "P", "", "Filename pattern to include in tree (e.g. *foo*)")
+	flag.StringVar(&exclude, "I", "", "Filename pattern to exclude from tree (e.g. tmp*)")
+	flag.BoolVar(&size, "z", false, "Show file sizes in bytes")
+	flag.BoolVar(&human, "h", false, "Show file sizes in human readable format (Kib, MiB, Gib, Tib)")
+	flag.BoolVar(&kind, "F", false, "Append a '/' for directories, a '=' for socket files, a '*' for executable files and a '|' for FIFO's, as per ls -F")
+	flag.BoolVar(&all, "a", false, "Show all files")
+
 	flag.Parse()
 
 	setChars(simple)
