@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 )
 
 var elbow rune
@@ -88,14 +89,20 @@ func listDir(dir string, level int) {
 			}
 		}
 		// TODO: Add color highlighting for directories?
-		fmt.Printf("%s%s\n", indent, f)
-		if fi.IsDir() {
-			totalDirectories++
-			listDir(filepath.Join(dir, fi.Name()), level+1)
-		} else {
-			totalFiles++
+		if okayToShow(f) {
+			fmt.Printf("%s%s\n", indent, f)
+			if fi.IsDir() {
+				totalDirectories++
+				listDir(filepath.Join(dir, fi.Name()), level+1)
+			} else {
+				totalFiles++
+			}
 		}
 	}
+}
+
+func okayToShow(f string) bool {
+	return all || !strings.HasPrefix(f, ".")
 }
 
 var exclude string
@@ -113,13 +120,13 @@ func main() {
 	flag.StringVar(&root, "d", ".", "Directory to build tree from")
 	flag.BoolVar(&simple, "s", false, "Use simple chars for line drawing")
 	flag.IntVar(&maxLevel, "L", math.MaxInt16, "Maximum levels to display")
+	flag.BoolVar(&all, "a", false, "Show all files")
 	// Unimplemented Flags
 	flag.StringVar(&include, "P", "", "Filename pattern to include in tree (e.g. *foo*)")
 	flag.StringVar(&exclude, "I", "", "Filename pattern to exclude from tree (e.g. tmp*)")
 	flag.BoolVar(&size, "z", false, "Show file sizes in bytes")
 	flag.BoolVar(&human, "h", false, "Show file sizes in human readable format (Kib, MiB, Gib, Tib)")
 	flag.BoolVar(&kind, "F", false, "Append a '/' for directories, a '=' for socket files, a '*' for executable files and a '|' for FIFO's, as per ls -F")
-	flag.BoolVar(&all, "a", false, "Show all files")
 
 	flag.Parse()
 
